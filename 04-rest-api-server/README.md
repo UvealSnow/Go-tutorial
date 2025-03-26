@@ -14,9 +14,38 @@ $ docker run --name some-mysql \
   -e MYSQL_USER=go-user \
   -e MYSQL_PASSWORD=go-user-pw \
   -e MYSQL_DATABASE=recordings \
+  # The init.sql file is located in folder 03-database-access
+  # Use cp to copy the file to the current folder or modify this flag
   -v ./init.sql:/docker-entrypoint-initdb.d/1.sql \
   --rm -d -p 3306:3306 mysql:9.2
 # Add required environment variables to the current shell
 $ source .env.example
 $ go run ./web-service-gin/main.go
 ```
+
+I've also added some rudimentary validation, so the server will return a 400 status code if the request body is invalid on POST and PUT requests and if the lookup ID for an album is not numeric in `/album/:id`.
+
+## Running the server
+
+You'll need either go or docker to run the server. You'll also need to have a MySQL database running and to update the `.env.example` file to match your DB configuration. Once that's done, you can run the server with the following command:
+
+```bash
+$ go run ./web-service-gin/main.go
+```
+
+To check out the returned data you just need to navigate to `http://localhost:3000/albums` in your browser or use curl:
+
+```bash
+$ curl http://localhost:3000/albums
+```
+
+To check the creation method you can use the following curl command:
+
+```bash
+$ curl http://localhost:3000/albums \
+    --include \
+    --header "Content-Type: application/json" \
+    --request "POST" \
+    --data '{"title": "Lateralus","artist": "TOOL","price": 49.99}'
+```
+
