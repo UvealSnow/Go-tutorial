@@ -1,31 +1,40 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
+	dbinterface "example.com/db-interface"
+	"example.com/db-interface/repository"
 	"github.com/gin-gonic/gin"
 )
 
-type album struct {
-	ID     string  `json:"id"`
-	Title  string  `json:"title"`
-	Artist string  `json:"artist"`
-	Price  float64 `json:"price"`
+type handler struct {
+	repos *repository.RepositoryMap
 }
 
-var albums = []album{
-	{ID: "1", Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
-	{ID: "2", Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
-	{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
+func newHandler(repos *repository.RepositoryMap) *handler {
+	handler := new(handler)
+	handler.repos = repos
+	return handler
 }
 
-func getAlbums(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, albums)
+func (h *handler) getAlbums(c *gin.Context) {
+	albums, err := h.repos.Albumrepository.FindAll()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+	}
+	c.JSON(http.StatusOK, albums)
 }
 
 func main() {
+	repositories, err := dbinterface.ConnectToDB()
+	handler := newHandler(repositories)
+	if err != nil {
+		log.Fatalf("Failed to connect to DB: %v", err)
+	}
 	router := gin.Default()
-	router.GET("/albums", getAlbums)
+	router.GET("/albums", handler.getAlbums)
 
 	router.Run("localhost:3000")
 }

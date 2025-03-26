@@ -9,8 +9,6 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-// var db *sql.DB
-
 type Album struct {
 	ID     int64
 	Title  string
